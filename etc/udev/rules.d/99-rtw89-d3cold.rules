@@ -1,0 +1,5 @@
+# Disable D3cold and enforce power control ON for Realtek RTL8852BE Wi-Fi (10ec:b852)
+ACTION=="add|change", SUBSYSTEM=="pci", ATTR{vendor}=="0x10ec", ATTR{device}=="0xb852", ATTR{d3cold_allowed}="0", ATTR{power/control}="on"
+
+# Disable runtime power management for AMD PCIe GPP Bridge (1022:14ba)
+ACTION=="add|change", SUBSYSTEM=="pci", ATTRS{vendor}=="0x1022", ATTRS{device}=="0x14ba", ATTR{power/control}="on"
