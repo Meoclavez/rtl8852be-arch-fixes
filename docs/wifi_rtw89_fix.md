@@ -33,7 +33,15 @@ Realtek RTL8852BE chipsets suffer from severe power-saving state incompatibiliti
 
 To achieve stable connectivity, power-saving features have been disabled at three layers: the kernel driver module parameters, the network daemon settings, and the PCIe hardware runtime rules.
 
-### A. Kernel Driver Module Parameters
+### A. Kernel Command Line (`/etc/default/grub`)
+- **Path:** `/etc/default/grub`
+- **Modifications:** Added `pci=no_d3cold` to `GRUB_CMDLINE_LINUX_DEFAULT` to prevent kernel ACPI power management from cutting slot link power (`Unable to change power state from D3cold to D0, device inaccessible`).
+- **Configuration Content:**
+  ```text
+  GRUB_CMDLINE_LINUX_DEFAULT="... pcie_aspm=off pci=noaer pci=no_d3cold"
+  ```
+
+### B. Kernel Driver Module Parameters
 - **Path:** `/etc/modprobe.d/70-rtw89.conf`
 - **Modifications:** Added options to disable PCIe ASPM (Active State Power Management) L1/L1SS states, driver low-power state (LPS) mode, and dynamic clock requests (CLKREQ).
 - **Configuration Content:**
