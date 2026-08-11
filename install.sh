@@ -25,21 +25,23 @@ mkdir -p /etc/systemd/system-sleep
 cp "$SCRIPT_DIR"/etc/systemd/system-sleep/rtw89-suspend-resume.sh /etc/systemd/system-sleep/
 chmod +x /etc/systemd/system-sleep/rtw89-suspend-resume.sh
 
-echo "==> Installing rfkill toggle-on recovery hook..."
-mkdir -p /usr/local/bin
-cp "$SCRIPT_DIR"/usr/local/bin/rtw89-toggle-on-hook.sh /usr/local/bin/
-chmod +x /usr/local/bin/rtw89-toggle-on-hook.sh
-
-echo "==> Reloading udev rules & triggering hardware refresh..."
+echo "==> Reloading udev rules..."
 udevadm control --reload-rules
 udevadm trigger
 
+echo "==> Enforcing non-destructive sysfs power rules..."
 if [ -f "/sys/bus/pci/devices/0000:00:02.2/power/control" ]; then
-    echo on > /sys/bus/pci/devices/0000:00:02.2/power/control
+    echo on > /sys/bus/pci/devices/0000:00:02.2/power/control 2>/dev/null || true
+    echo 0 > /sys/bus/pci/devices/0000:00:02.2/d3cold_allowed 2>/dev/null || true
 fi
 
-echo "==> Restarting NetworkManager..."
-systemctl restart NetworkManager
+if [ -f "/sys/bus/pci/devices/0000:03:00.0/power/control" ]; then
+    echo on > /sys/bus/pci/devices/0000:03:00.0/power/control 2>/dev/null || true
+    echo 0 > /sys/bus/pci/devices/0000:03:00.0/d3cold_allowed 2>/dev/null || true
+fi
+
+rfkill unblock wifi 2>/dev/null || true
+rfkill unblock bluetooth 2>/dev/null || true
 
 echo "=========================================================================="
 echo "  Success! Realtek RTL8852BE Wi-Fi & Bluetooth fixes installed."
