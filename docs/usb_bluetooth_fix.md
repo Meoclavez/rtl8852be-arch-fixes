@@ -1,6 +1,6 @@
 # USB Bluetooth & Wi-Fi Configuration Fixes (Post-Kernel 7.1 Update)
 
-This document details the root causes and configuration updates applied to fix USB Bluetooth dropouts, Wi-Fi coexistence collisions, and PCIe/USB power management on the **Realtek RTL8852BE combo card (13d3:3571 / 10ec:b852)** under modern Linux kernels (6.x / 7.x).
+This document details the root causes and configuration updates applied to fix USB Bluetooth dropouts, Wi-Fi coexistence collisions, link TX timeouts, and PCIe/USB power management on the **Realtek RTL8852BE combo card (13d3:3571 / 10ec:b852)** under modern Linux kernels (6.x / 7.x).
 
 ---
 
@@ -12,18 +12,27 @@ This document details the root causes and configuration updates applied to fix U
 - **Fix:**
   1. Blacklisted `btusb` from autoloading at boot (`/etc/modprobe.d/btusb-blacklist.conf`).
   2. Created a systemd service (`/etc/systemd/system/bt-xhci-reset.service`) that waits 30 seconds after boot for `rtw89` and rfkill to settle before cleanly loading `btusb`.
-  3. Added `reset=0` to `/etc/modprobe.d/btusb.conf` to prevent the driver from triggering catastrophic USB port resets upon transmit timeouts.
+  3. Added `reset=0` and `force_scofix=y` to `/etc/modprobe.d/btusb.conf`.
 
-### B. `pci=no_d3cold` Kernel Parameter Deprecation (Kernel 7.1+)
+### B. Audio Link TX Timeouts & RF Contention (`link tx timeout`)
+- **Symptom:** While connected to Bluetooth audio devices (e.g. wireless earbuds / headsets), audio drops, connection is killed with `Bluetooth: hci0: link tx timeout: killing stalled connection`, and subsequent opcodes return `-71` until the kernel watchdog resets the USB controller.
+- **Root Cause:**
+  1. `FastConnectable = true` in `/etc/bluetooth/main.conf` forces a 100% duty cycle page scan. On combo cards with a shared 2.4GHz antenna, this monopolizes RF airtime and starves active A2DP / HFP audio streaming packets.
+  2. Realtek chipsets report incorrect SCO buffer sizes when Hands-Free Voice Gateway is registered alongside A2DP, causing TX ring stalls.
+- **Fix:**
+  1. Disabled `FastConnectable` in `/etc/bluetooth/main.conf` (`#FastConnectable = false`).
+  2. Enabled `force_scofix=y` in `/etc/modprobe.d/btusb.conf`.
+
+### C. `pci=no_d3cold` Kernel Parameter Deprecation (Kernel 7.1+)
 - **Symptom:** Kernel logs show `PCI: Unknown option 'no_d3cold'`. Without global protection, the AMD XHCI USB controller (`0000:05:00.4`) and its parent PCIe bridge (`0000:00:08.1`) entered D3cold upon shutdown/sleep, causing `error -71` on the subsequent boot.
 - **Fix:** Added per-device sysfs udev rules in `/etc/udev/rules.d/99-bluetooth-power.rules` to enforce `ATTR{d3cold_allowed}="0"` and `ATTR{power/control}="on"` for:
   - AMD XHCI Controller #4 (`1022:161e` / `0000:05:00.4`)
   - AMD XHCI Controller #3 (`1022:161d` / `0000:05:00.3`)
   - Parent PCIe Bridge (`1022:14b9` / `0000:00:08.1`)
 
-### C. USB Bluetooth Autosuspend
+### D. USB Bluetooth Autosuspend
 - **Symptom:** `btusb` attempted runtime power cuts resulting in command timeouts (`-110` / `-71`).
-- **Fix:** Configured `options btusb enable_autosuspend=n reset=0` and set USB udev rule `ATTR{power/autosuspend_delay_ms}="-1"`.
+- **Fix:** Configured `options btusb enable_autosuspend=n reset=0 force_scofix=y` and set USB udev rule `ATTR{power/autosuspend_delay_ms}="-1"`.
 
 ---
 
@@ -36,7 +45,13 @@ blacklist btusb
 
 ### `/etc/modprobe.d/btusb.conf`
 ```text
-options btusb enable_autosuspend=n reset=0
+options btusb enable_autosuspend=n reset=0 force_scofix=y
+```
+
+### `/etc/bluetooth/main.conf`
+```ini
+[General]
+# FastConnectable = false (ensures standard page scan duty cycle to prevent RF contention on combo antenna)
 ```
 
 ### `/etc/systemd/system/bt-xhci-reset.service`

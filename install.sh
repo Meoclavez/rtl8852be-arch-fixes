@@ -31,6 +31,11 @@ cp "$SCRIPT_DIR"/etc/systemd/system/bt-xhci-reset.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable bt-xhci-reset.service
 
+echo "==> Optimizing BlueZ main.conf (Disabling FastConnectable RF contention)..."
+if [ -f "/etc/bluetooth/main.conf" ]; then
+    sed -i 's/^FastConnectable = true/#FastConnectable = false/' /etc/bluetooth/main.conf 2>/dev/null || true
+fi
+
 echo "==> Reloading udev rules..."
 udevadm control --reload-rules
 udevadm trigger
