@@ -25,11 +25,18 @@ mkdir -p /etc/systemd/system-sleep
 cp "$SCRIPT_DIR"/etc/systemd/system-sleep/rtw89-suspend-resume.sh /etc/systemd/system-sleep/
 chmod +x /etc/systemd/system-sleep/rtw89-suspend-resume.sh
 
+echo "==> Installing Bluetooth delayed-load systemd service..."
+mkdir -p /etc/systemd/system
+cp "$SCRIPT_DIR"/etc/systemd/system/bt-xhci-reset.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable bt-xhci-reset.service
+
 echo "==> Reloading udev rules..."
 udevadm control --reload-rules
 udevadm trigger
 
 echo "==> Enforcing non-destructive sysfs power rules..."
+# Wi-Fi PCIe and Root Port
 if [ -f "/sys/bus/pci/devices/0000:00:02.2/power/control" ]; then
     echo on > /sys/bus/pci/devices/0000:00:02.2/power/control 2>/dev/null || true
     echo 0 > /sys/bus/pci/devices/0000:00:02.2/d3cold_allowed 2>/dev/null || true
@@ -38,6 +45,22 @@ fi
 if [ -f "/sys/bus/pci/devices/0000:03:00.0/power/control" ]; then
     echo on > /sys/bus/pci/devices/0000:03:00.0/power/control 2>/dev/null || true
     echo 0 > /sys/bus/pci/devices/0000:03:00.0/d3cold_allowed 2>/dev/null || true
+fi
+
+# Bluetooth AMD XHCI Controllers and Parent Bridge
+if [ -f "/sys/bus/pci/devices/0000:05:00.4/power/control" ]; then
+    echo on > /sys/bus/pci/devices/0000:05:00.4/power/control 2>/dev/null || true
+    echo 0 > /sys/bus/pci/devices/0000:05:00.4/d3cold_allowed 2>/dev/null || true
+fi
+
+if [ -f "/sys/bus/pci/devices/0000:05:00.3/power/control" ]; then
+    echo on > /sys/bus/pci/devices/0000:05:00.3/power/control 2>/dev/null || true
+    echo 0 > /sys/bus/pci/devices/0000:05:00.3/d3cold_allowed 2>/dev/null || true
+fi
+
+if [ -f "/sys/bus/pci/devices/0000:00:08.1/power/control" ]; then
+    echo on > /sys/bus/pci/devices/0000:00:08.1/power/control 2>/dev/null || true
+    echo 0 > /sys/bus/pci/devices/0000:00:08.1/d3cold_allowed 2>/dev/null || true
 fi
 
 rfkill unblock wifi 2>/dev/null || true

@@ -1,5 +1,11 @@
 # Disable autosuspend for the Realtek Bluetooth USB device (13d3:3571)
-ACTION=="add|change", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="13d3", ATTRS{idProduct}=="3571", ATTR{power/control}="on", ATTR{power/autosuspend_delay_ms}="-1"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="13d3", ATTRS{idProduct}=="3571", ATTR{power/control}="on", ATTR{power/autosuspend_delay_ms}="-1"
 
-# Disable runtime power management for the parent AMD XHCI USB controller (0000:05:00.4)
-ACTION=="add|change", SUBSYSTEM=="pci", ATTRS{vendor}=="0x1022", ATTRS{device}=="0x161e", ATTR{power/control}="on"
+# Disable D3cold and runtime power management for AMD XHCI USB4 controller #4 (05:00.4) - hosts Bluetooth
+SUBSYSTEM=="pci", ATTR{vendor}=="0x1022", ATTR{device}=="0x161e", ATTR{d3cold_allowed}="0", ATTR{power/control}="on"
+
+# Disable D3cold for AMD XHCI USB4 controller #3 sibling (05:00.3)
+SUBSYSTEM=="pci", ATTR{vendor}=="0x1022", ATTR{device}=="0x161d", ATTR{d3cold_allowed}="0", ATTR{power/control}="on"
+
+# Disable D3cold for the parent PCIe bridge (00:08.1) that powers the entire 05:xx bus
+SUBSYSTEM=="pci", ATTR{vendor}=="0x1022", ATTR{device}=="0x14b9", ATTR{d3cold_allowed}="0", ATTR{power/control}="on"
