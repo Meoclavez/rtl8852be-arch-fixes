@@ -20,6 +20,10 @@ echo "==> Installing NetworkManager power save override..."
 mkdir -p /etc/NetworkManager/conf.d
 cp "$SCRIPT_DIR"/etc/NetworkManager/conf.d/*.conf /etc/NetworkManager/conf.d/
 
+echo "==> Installing WirePlumber Bluetooth audio stability policy..."
+mkdir -p /etc/wireplumber/wireplumber.conf.d
+cp "$SCRIPT_DIR"/etc/wireplumber/wireplumber.conf.d/*.conf /etc/wireplumber/wireplumber.conf.d/
+
 echo "==> Installing systemd sleep hook..."
 mkdir -p /etc/systemd/system-sleep
 cp "$SCRIPT_DIR"/etc/systemd/system-sleep/rtw89-suspend-resume.sh /etc/systemd/system-sleep/
