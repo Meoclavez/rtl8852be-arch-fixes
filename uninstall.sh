@@ -6,9 +6,10 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-echo "==> Disabling and removing Bluetooth delayed-load service..."
+echo "==> Disabling and removing Bluetooth delayed-load service and helper..."
 systemctl disable --now bt-xhci-reset.service 2>/dev/null || true
 rm -f /etc/systemd/system/bt-xhci-reset.service
+rm -f /usr/local/sbin/btusb-delayed-loader.sh
 systemctl daemon-reload
 
 echo "==> Removing udev rules..."
@@ -23,6 +24,9 @@ rm -f /etc/modprobe.d/btusb-blacklist.conf
 
 echo "==> Removing NetworkManager power save override..."
 rm -f /etc/NetworkManager/conf.d/99-disable-wifi-powersave.conf
+
+echo "==> Removing WirePlumber audio policy..."
+rm -f /etc/wireplumber/wireplumber.conf.d/11-bluetooth-policy.conf
 
 echo "==> Removing hooks..."
 rm -f /etc/systemd/system-sleep/rtw89-suspend-resume.sh

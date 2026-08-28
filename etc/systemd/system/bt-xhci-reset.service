@@ -1,19 +1,12 @@
 [Unit]
-Description=Delayed load of btusb after Wi-Fi coexistence settles
+Description=Robust delayed load & self-healing retry of btusb for Realtek RTL8852BE
 Documentation=https://wiki.archlinux.org/title/Bluetooth
-# Run after kernel modules (rtw89) are loaded and udev settled
-After=systemd-modules-load.service systemd-udev-settle.service
-# Must complete before bluetooth.service tries to start
+After=systemd-modules-load.service systemd-udev-settle.service NetworkManager.service
 Before=bluetooth.service bluetooth.target
 
 [Service]
 Type=oneshot
-# Wait 30s for rtw89 coexistence manager to finish its init-time resets
-ExecStartPre=/bin/sleep 30
-# Load btusb fresh — blacklist prevents any prior auto-probe
-ExecStart=/sbin/modprobe btusb
-# Give the chip 5s to enumerate and load firmware
-ExecStartPost=/bin/sleep 5
+ExecStart=/usr/local/sbin/btusb-delayed-loader.sh
 RemainAfterExit=yes
 StandardOutput=journal
 StandardError=journal

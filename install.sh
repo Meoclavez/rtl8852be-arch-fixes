@@ -29,7 +29,11 @@ mkdir -p /etc/systemd/system-sleep
 cp "$SCRIPT_DIR"/etc/systemd/system-sleep/rtw89-suspend-resume.sh /etc/systemd/system-sleep/
 chmod +x /etc/systemd/system-sleep/rtw89-suspend-resume.sh
 
-echo "==> Installing Bluetooth delayed-load systemd service..."
+echo "==> Installing Bluetooth self-healing delayed-load script and service..."
+mkdir -p /usr/local/sbin
+cp "$SCRIPT_DIR"/usr/local/sbin/btusb-delayed-loader.sh /usr/local/sbin/
+chmod +x /usr/local/sbin/btusb-delayed-loader.sh
+
 mkdir -p /etc/systemd/system
 cp "$SCRIPT_DIR"/etc/systemd/system/bt-xhci-reset.service /etc/systemd/system/
 systemctl daemon-reload
