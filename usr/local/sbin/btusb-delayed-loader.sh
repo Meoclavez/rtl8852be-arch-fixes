@@ -16,16 +16,12 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
     # Check if a Bluetooth HCI controller interface appeared in sysfs
     if compgen -G "/sys/class/bluetooth/hci*" > /dev/null; then
         echo "btusb-loader: Success! Bluetooth HCI controller detected."
-        # Ensure bluetooth daemon is running and controller is powered
-        /usr/bin/systemctl restart bluetooth 2>/dev/null || true
-        sleep 2
-        /usr/bin/bluetoothctl power on 2>/dev/null || true
         exit 0
-    else
-        echo "btusb-loader: Warning: No HCI controller found (possibly error -71). Unloading and retrying..."
-        /sbin/modprobe -r btusb 2>/dev/null || true
-        sleep 2
     fi
+
+    echo "btusb-loader: Warning: No HCI controller found (possibly error -71). Unloading and retrying..."
+    /sbin/modprobe -r btusb 2>/dev/null || true
+    sleep 2
 
     ATTEMPT=$((ATTEMPT + 1))
 done
