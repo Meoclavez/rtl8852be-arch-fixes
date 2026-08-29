@@ -3,7 +3,8 @@
 
 case "$1" in
     pre)
-        # Unload driver before entering low-power sleep state to prevent firmware/xtal freezes
+        # Unload bluetooth and Wi-Fi drivers before entering low-power sleep state
+        /usr/bin/modprobe -r btusb 2>/dev/null || true
         /usr/bin/modprobe -r rtw89_8852be rtw89_8852b rtw89_pci rtw89_8852b_common rtw89_core 2>/dev/null || true
         ;;
     post)
@@ -13,11 +14,14 @@ case "$1" in
         fi
         echo 1 > /sys/bus/pci/rescan
         
-        # Load driver stack
+        # Load Wi-Fi driver stack
         /usr/bin/modprobe rtw89_8852be
         
         # Ensure rfkill is unblocked
         /usr/bin/rfkill unblock wifi 2>/dev/null || true
         /usr/bin/rfkill unblock bluetooth 2>/dev/null || true
+        
+        # Trigger the self-healing delayed loader in background to re-initialize Bluetooth after wake
+        (/usr/local/sbin/btusb-delayed-loader.sh &)
         ;;
 esac
