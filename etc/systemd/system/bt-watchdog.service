@@ -1,0 +1,15 @@
+[Unit]
+Description=Realtek RTL8852BE Bluetooth Auto-Recovery Watchdog
+Documentation=https://github.com/Meoclavez/rtl8852be-arch-fixes
+After=multi-user.target bluetooth.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/bt-watchdog.sh
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -29,15 +29,18 @@ mkdir -p /etc/systemd/system-sleep
 cp "$SCRIPT_DIR"/etc/systemd/system-sleep/rtw89-suspend-resume.sh /etc/systemd/system-sleep/
 chmod +x /etc/systemd/system-sleep/rtw89-suspend-resume.sh
 
-echo "==> Installing Bluetooth self-healing delayed-load script and service..."
+echo "==> Installing Bluetooth self-healing delayed-load script and watchdog daemon..."
 mkdir -p /usr/local/sbin
 cp "$SCRIPT_DIR"/usr/local/sbin/btusb-delayed-loader.sh /usr/local/sbin/
 chmod +x /usr/local/sbin/btusb-delayed-loader.sh
+cp "$SCRIPT_DIR"/usr/local/sbin/bt-watchdog.sh /usr/local/sbin/
+chmod +x /usr/local/sbin/bt-watchdog.sh
 
 mkdir -p /etc/systemd/system
-cp "$SCRIPT_DIR"/etc/systemd/system/bt-xhci-reset.service /etc/systemd/system/
+cp "$SCRIPT_DIR"/etc/systemd/system/*.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable bt-xhci-reset.service
+systemctl enable --now bt-watchdog.service
 
 echo "==> Optimizing BlueZ main.conf (Disabling FastConnectable RF contention)..."
 if [ -f "/etc/bluetooth/main.conf" ]; then
