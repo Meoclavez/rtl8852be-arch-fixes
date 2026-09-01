@@ -9,7 +9,7 @@ for pci_dev in "0000:00:08.1" "0000:05:00.4" "0000:05:00.3"; do
     [ -f "/sys/bus/pci/devices/$pci_dev/d3cold_allowed" ] && echo 0 > "/sys/bus/pci/devices/$pci_dev/d3cold_allowed" 2>/dev/null || true
 done
 
-# 2. Reset AMD USB root-hub Port 3 to clear port-disable / EMI locks from sleep
+# 2. Reset AMD USB root-hub Port 3 to clear port-disable / EMI locks from boot
 USB_PORT="/sys/bus/usb/devices/usb3/3-0:1.0/usb3-port3/disable"
 if [ -f "$USB_PORT" ]; then
     echo "btusb-loader: Power cycling USB3 Port 3 to clear AMD XHCI port disable/EMI lock..."
@@ -20,7 +20,7 @@ if [ -f "$USB_PORT" ]; then
 fi
 
 # 3. Controlled load loop with hardware verification
-MAX_ATTEMPTS=4
+MAX_ATTEMPTS=5
 ATTEMPT=1
 
 while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
@@ -31,6 +31,7 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
     if compgen -G "/sys/class/bluetooth/hci*/rfkill*" > /dev/null; then
         echo "btusb-loader: Success! Bluetooth HCI controller verified and active."
         /usr/bin/rfkill unblock bluetooth 2>/dev/null || true
+        # NOTE: Do NOT invoke bluetoothctl here because bluetooth.service starts AFTER this script exits!
         exit 0
     fi
 
