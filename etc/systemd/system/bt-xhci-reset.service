@@ -1,7 +1,7 @@
 [Unit]
 Description=Robust delayed load & self-healing retry of btusb for Realtek RTL8852BE
 Documentation=https://wiki.archlinux.org/title/Bluetooth
-After=systemd-modules-load.service systemd-udev-settle.service NetworkManager.service
+After=systemd-modules-load.service systemd-udev-settle.service NetworkManager.service network-online.target
 Before=bluetooth.service bluetooth.target
 
 [Service]

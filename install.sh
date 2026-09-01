@@ -21,7 +21,9 @@ with open("/etc/default/grub", "r") as f:
 match = re.search(r'^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"', content, re.M)
 if match:
     current_params = match.group(1).split()
-    to_add = ["pci=no_d3cold", "btusb.enable_autosuspend=n", "usbcore.autosuspend=-1"]
+    # Clean deprecated pci=no_d3cold if present
+    current_params = [p for p in current_params if p != "pci=no_d3cold"]
+    to_add = ["btusb.enable_autosuspend=n", "usbcore.autosuspend=-1"]
     for p in to_add:
         if p not in current_params:
             current_params.append(p)
@@ -67,10 +69,11 @@ cp -f "$SCRIPT_DIR"/etc/systemd/system/bt-xhci-reset.service /etc/systemd/system
 systemctl daemon-reload
 systemctl enable bt-xhci-reset.service
 
-echo "==> 8. Configuring BlueZ main.conf..."
+echo "==> 8. Configuring BlueZ main.conf (Disabling background reconnection storms)..."
 if [ -f "/etc/bluetooth/main.conf" ]; then
     sed -i 's/^#*AutoEnable=.*/AutoEnable=true/' /etc/bluetooth/main.conf 2>/dev/null || true
-    sed -i 's/^FastConnectable = true/#FastConnectable = false/' /etc/bluetooth/main.conf 2>/dev/null || true
+    sed -i 's/^#*FastConnectable = .*/#FastConnectable = false/' /etc/bluetooth/main.conf 2>/dev/null || true
+    sed -i 's/^#*ReconnectAttempts=.*/ReconnectAttempts=0/' /etc/bluetooth/main.conf 2>/dev/null || true
 fi
 
 echo "==> 9. Reloading udev rules..."
