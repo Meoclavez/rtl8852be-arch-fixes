@@ -6,12 +6,9 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-echo "==> Disabling and removing Bluetooth services and daemons..."
-systemctl disable --now bt-watchdog.service 2>/dev/null || true
+echo "==> Disabling and removing Bluetooth services..."
 systemctl disable --now bt-xhci-reset.service 2>/dev/null || true
-rm -f /etc/systemd/system/bt-watchdog.service
 rm -f /etc/systemd/system/bt-xhci-reset.service
-rm -f /usr/local/sbin/bt-watchdog.sh
 rm -f /usr/local/sbin/btusb-delayed-loader.sh
 systemctl daemon-reload
 

@@ -29,22 +29,25 @@ mkdir -p /etc/systemd/system-sleep
 cp "$SCRIPT_DIR"/etc/systemd/system-sleep/rtw89-suspend-resume.sh /etc/systemd/system-sleep/
 chmod +x /etc/systemd/system-sleep/rtw89-suspend-resume.sh
 
-echo "==> Installing Bluetooth self-healing delayed-load script and watchdog daemon..."
+echo "==> Installing Bluetooth self-healing delayed-load script..."
 mkdir -p /usr/local/sbin
 cp "$SCRIPT_DIR"/usr/local/sbin/btusb-delayed-loader.sh /usr/local/sbin/
 chmod +x /usr/local/sbin/btusb-delayed-loader.sh
-cp "$SCRIPT_DIR"/usr/local/sbin/bt-watchdog.sh /usr/local/sbin/
-chmod +x /usr/local/sbin/bt-watchdog.sh
 
 mkdir -p /etc/systemd/system
 cp "$SCRIPT_DIR"/etc/systemd/system/*.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable bt-xhci-reset.service
-systemctl enable --now bt-watchdog.service
 
 echo "==> Optimizing BlueZ main.conf (Disabling FastConnectable RF contention)..."
 if [ -f "/etc/bluetooth/main.conf" ]; then
     sed -i 's/^FastConnectable = true/#FastConnectable = false/' /etc/bluetooth/main.conf 2>/dev/null || true
+fi
+
+echo "==> Preventing Blueman conflict in KDE Plasma..."
+if [ -f "/etc/xdg/autostart/blueman.desktop" ]; then
+    sed -i '/NotShowIn=KDE;/d' /etc/xdg/autostart/blueman.desktop 2>/dev/null || true
+    sed -i '/^Type=Application/a NotShowIn=KDE;' /etc/xdg/autostart/blueman.desktop 2>/dev/null || true
 fi
 
 echo "==> Reloading udev rules..."
